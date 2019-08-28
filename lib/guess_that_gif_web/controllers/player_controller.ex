@@ -8,35 +8,34 @@ defmodule GuessThatGifWeb.PlayerController do
     %{
       "username" => username,
       "password" => password
-  }) do
-    if GuessThatGif.Player |> GuessThatGif.Repo.exists?(first_name: username) do
-      conn |> json(%{error: "Username already exists"})
-    else
-      new_player =
-        GuessThatGif.Repo.insert!(
-          %GuessThatGif.Player
-          {
-            username: username,
-            password: password,
-            total_correct_guesses: 0,
-            total_times_won: 0,
-            total_wrong_guesses: 0,
-            games_played: 0,
+    }
+  ) do
+    result = GuessThatGif.PlayerService.create username, password
 
-          }
-        )
-
-      conn |> json(%{id: new_player.id})
+    case result do
+      {:success, data} ->
+        conn |> json(%{id: data.id})
+      {:error, message} ->
+        conn |> json(%{ok: false, error: message})
     end
   end
 
-  def login(conn, _params) do
-
+  def login(
+    conn, %{
+      "username" => _username,
+      "password" => _password
+    }
+  ) do
+    conn |> json(%{error: True})
   end
 
-  def info(conn, _params) do
-    player = GuessThatGif.Player |> Ecto.Query.first
+  def info(
+    conn, %{
+      "username" => username
+    }
+  ) do
+    player = GuessThatGif.Player |> first(%{username: username})
 
-    conn |> json player
+    conn |> json(player)
   end
 end

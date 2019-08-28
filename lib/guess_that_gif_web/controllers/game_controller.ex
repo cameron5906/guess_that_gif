@@ -2,7 +2,7 @@ defmodule GuessThatGifWeb.GameController do
   use GuessThatGifWeb, :controller
 
   def start(conn, _params) do
-    json(conn, %{fuck_me: True})
+    json(conn, %{herp_derp: True})
   end
 
   def join(conn, _params) do
