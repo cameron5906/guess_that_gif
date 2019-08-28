@@ -1,0 +1,18 @@
+.player-list {
+  box-shadow: 0px 4px 3px #acacac;
+  position: fixed;
+  bottom: 5em;
+  left: 0;
+  padding-left: 5em;
+  padding-right: 5em;
+  height: 10em;
+  width: 100%; }
+
+.player-list .player {
+  width: 8em;
+  height: 8em;
+  display: inline-block;
+  margin-right: 5em;
+  border: 1px solid #000;
+  text-align: center;
+  padding-top: 3em; }
