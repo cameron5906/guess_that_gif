@@ -16,11 +16,22 @@ defmodule GuessThatGifWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
-    post "/player/register", PlayerController, :register
-    post "/player/login", PlayerController, :login
-    post "/game/start", GameController, :start
-    post "/game/join", GameController, :join
-    get "/game/info", GameController, :info
+  end
+
+  scope "/game", GuessThatGifWeb do
+    pipe_through :api
+
+    post "/start", GameController, :start
+    post "/join", GameController, :join
+    get "/info", GameController, :info
+  end
+
+  scope "/player", GuessThatGifWeb do
+    pipe_through :api
+
+    post "/register", PlayerController, :register
+    post "/login", PlayerController, :login
+    get "/info", PlayerController, :info
   end
 
   # Other scopes may use custom stacks.
