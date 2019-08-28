@@ -16,7 +16,8 @@ main =
 ----TYPE DEFINITIONS
 type alias Player =
     {
-        name: String
+        name: String,
+        guess: String
     }
 
 type alias Model =
@@ -35,10 +36,12 @@ initModel =
     {
         players = [
             {
-                name = "Cameron"
+                name = "Cameron",
+                guess = ""
             },
             {
-                name = "Josh"
+                name = "Josh",
+                guess = "Cat"
             }
         ],
         gif_link = ""
@@ -61,9 +64,18 @@ render_player_list {players} =
         div [] (List.map render_player players) --loop through players list and call player render func
     ]
 
-render_player: {name: String} -> Html Msg
-render_player {name} =
-    div [class "player"] [text name]
+render_player: {name: String, guess: String} -> Html Msg
+render_player {name, guess} =
+    div [class "player"] [
+        text name,
+        if guess /= "" then 
+            div [class "guess-bubble"][
+                text (guess ++ "!"),
+                div [class "triangle"][]
+            ] 
+        else 
+            p[][]
+    ]
 
 render_status =
     div [class "game-status"][
