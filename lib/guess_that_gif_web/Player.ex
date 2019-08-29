@@ -8,5 +8,7 @@ defmodule GuessThatGif.Player do
     field :total_wrong_guesses, :integer
     field :total_times_won, :integer
     field :games_played, :integer
+    has_many :guesses, GuessThatGif.Guess
+    has_many :queries, GuessThatGif.SearchQuery
   end
 end
