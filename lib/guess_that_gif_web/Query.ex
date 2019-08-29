@@ -6,7 +6,7 @@ defmodule GuessThatGif.SearchQuery do
         field :query, :string
         field :gif, :string
         field :inserted_on, :time
-        belongs_to :player, Player
+        belongs_to :player, GuessThatGif.Player
     end
   end
   
