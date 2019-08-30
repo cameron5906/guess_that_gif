@@ -43,7 +43,9 @@ defmodule GuessThatGif.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:corsica, "~> 1.0"}
+      {:corsica, "~> 1.0"},
+      {:httpotion, "~> 3.1.0"},
+      {:poison, "~> 3.1"}
     ]
   end
 

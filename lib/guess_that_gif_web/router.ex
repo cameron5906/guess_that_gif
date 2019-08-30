@@ -24,6 +24,7 @@ defmodule GuessThatGifWeb.Router do
     post "/start", GameController, :start
     post "/join", GameController, :join
     get "/info", GameController, :info
+    post "/query", GameController, :query
   end
 
   scope "/player", GuessThatGifWeb do

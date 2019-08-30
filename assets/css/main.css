@@ -19,13 +19,16 @@ html, body {
   width: 24em;
   min-height: 5em;
   margin-left: -12em;
-  margin-top: -18em;
-  border: 1px solid #000; }
+  margin-top: -18em; }
   .image-preview p {
     position: absolute;
     top: -2em;
     width: 100%;
     text-align: center; }
+  .image-preview img {
+    margin: auto auto;
+    display: block;
+    border: 1px solid #000; }
 
 .game-status {
   position: fixed;
