@@ -25,6 +25,7 @@ defmodule GuessThatGifWeb.Router do
     post "/join", GameController, :join
     get "/info", GameController, :info
     post "/query", GameController, :query
+    post "/guess", GameController, :guess
   end
 
   # Other scopes may use custom stacks.

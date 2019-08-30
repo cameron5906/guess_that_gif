@@ -23,11 +23,15 @@ defmodule GuessThatGif.GameService do
         players =
             GuessThatGif.Repo.all(
                 from ply in "player",
+                left_join: g in "guess",
+                on: g.player_id == ply.id,
                 where: ply.game == ^result.id,
+                order_by: [desc: g.guessed_on],
+                distinct: ply.id,
                 select: %{
                     name: ply.username,
-                    guess: "",
-                    guess_time: 0
+                    guess: fragment("CASE WHEN ? = ? THEN ? ELSE ? END", g.guess, nil, "", g.guess),
+                    guess_time: fragment("EXTRACT(epoch from ?)", g.guessed_on)
                 }
             )
 
@@ -60,6 +64,15 @@ defmodule GuessThatGif.GameService do
             {:error, _changeset} ->
                 {:error, ""}
         end
+    end
+
+    def can_join_game(_player_id, game_code) do
+        game = 
+            GuessThatGif.Game
+            |> where(join_code: ^game_code)
+            |> GuessThatGif.Repo.one
+
+        {:ok, game.id}
     end
 
     def get_game_status(game_code) do
@@ -112,6 +125,25 @@ defmodule GuessThatGif.GameService do
         
     end
 
+    def submit_guess(session, guess) do
+        player = 
+            GuessThatGif.Player
+            |> where(session: ^session)
+            |> GuessThatGif.Repo.one
+
+        game =
+            GuessThatGif.Game
+            |> where(id: ^player.game)
+            |> GuessThatGif.Repo.one
+
+        %GuessThatGif.Guess{
+            guess: guess,
+            game_code: game.join_code,
+            player_id: player.id,
+            guessed_on: DateTime.truncate(DateTime.utc_now, :second)
+        } |> GuessThatGif.Repo.insert
+    end
+
     def broadcast_message(game_code, message) do
         GuessThatGif.Repo.one(
             from g in GuessThatGif.Game,
@@ -120,5 +152,16 @@ defmodule GuessThatGif.GameService do
         )
             |> Ecto.Changeset.change(status: message)
             |> GuessThatGif.Repo.update
+    end
+
+    def get_latest_guessed(game_code) do
+        (
+            from g in GuessThatGif.Guess,
+            join: ply in GuessThatGif.Player,
+            on: g.player_id == ply.id,
+            where: g.game_code == ^game_code,
+            order_by: g.guessed_on,
+            select: %{guess: g.guess, guessed_on: g.guessed_on, username: ply.username}
+        ) |> GuessThatGif.Repo.all
     end
 end

@@ -65,6 +65,17 @@ type alias CreateGameResponseData =
         session: Maybe String
     }
 
+type alias JoinGameResponseData =
+    {
+        session: Maybe String,
+        error: Maybe String
+    }
+
+type alias SendGuessResponseData =
+    {
+        correct: Bool
+    }
+
 type Msg
     = GuessKeyDown Int
     | UpdateTimeRemaining Time.Posix
@@ -79,6 +90,9 @@ type Msg
     | UsernameInputChange String
     | CreateGameResponse (Result Http.Error CreateGameResponseData)
     | BackToMenu
+    | JoinGameResponse (Result Http.Error JoinGameResponseData)
+    | GameCodeInputChange String
+    | SendGuessResponse (Result Http.Error SendGuessResponseData)
 
 --Create the initial state of the game
 initModel: (Model, Cmd Msg)
@@ -91,18 +105,7 @@ initModel =
         game_code = "",
         username = "",
         guess_input = "",
-        players = [
-            {
-                name = "Cameron",
-                guess = "",
-                guess_time = 0
-            },
-            {
-                name = "Josh",
-                guess = "Cat",
-                guess_time = 0
-            }
-        ],
+        players = [],
         gif_url = "",
         gif_timeout = 0,
         status = "",
@@ -118,6 +121,12 @@ create_game_response_decoder =
         (D.maybe (D.field "code" D.string))
         (D.maybe (D.field "error" D.string))
         (D.maybe (D.field "session" D.string))
+
+join_game_response_decoder: D.Decoder JoinGameResponseData
+join_game_response_decoder =
+    D.map2 JoinGameResponseData
+        (D.maybe (D.field "session" D.string))
+        (D.maybe (D.field "error" D.string))
 
 gamestate_info_decoder: D.Decoder GameInfo
 gamestate_info_decoder =
@@ -143,6 +152,11 @@ new_query_response_decoder: D.Decoder Bool
 new_query_response_decoder =
     D.field "success" D.bool
 
+send_guess_response_decoder: D.Decoder SendGuessResponseData
+send_guess_response_decoder =
+    D.map SendGuessResponseData
+        (D.field "correct" D.bool)
+
 --JSON ENCODERS
 query_request_encoder: String -> E.Value
 query_request_encoder query =
@@ -152,6 +166,20 @@ create_game_request_encoder: String -> E.Value
 create_game_request_encoder username =
     E.object [ ("username", E.string username)]
 
+join_game_request_encoder: String -> String -> E.Value
+join_game_request_encoder username code =
+    E.object [ 
+                ("username", E.string username), 
+                ("code", E.string code)
+            ]
+
+send_guess_request_encoder: String -> String -> E.Value
+send_guess_request_encoder session guess =
+    E.object [
+        ("session", E.string session),
+        ("guess", E.string guess)
+    ]
+
 ---UPDATE FUNCTIONS
 update_remove_latest_guesses: Model -> Model
 update_remove_latest_guesses model =
@@ -159,7 +187,7 @@ update_remove_latest_guesses model =
         model |
         players = List.map(
         \ply -> 
-            if model.current_time - ply.guess_time > 1500 then
+            if model.current_time - ply.guess_time > 2 then
                 {ply | guess = ""}
             else
                 ply
@@ -189,6 +217,15 @@ create_game_request username =
             expect = Http.expectJson CreateGameResponse create_game_response_decoder
         }
 
+join_game_request: String -> String -> Cmd Msg
+join_game_request username code =
+    Http.post
+        {
+            url = "/game/join",
+            body = Http.jsonBody <| join_game_request_encoder username code,
+            expect = Http.expectJson JoinGameResponse join_game_response_decoder
+        }
+
 update_state_from_server: Model -> Cmd Msg
 update_state_from_server model =
     Http.get
@@ -206,6 +243,15 @@ send_new_query model text =
             expect = Http.expectJson NewQueryResponse new_query_response_decoder
         }
 
+send_guess: Model -> Cmd Msg
+send_guess model =
+    Http.post
+        {
+            url = "/game/guess",
+            body = Http.jsonBody <| send_guess_request_encoder model.session model.guess_input,
+            expect = Http.expectJson SendGuessResponse send_guess_response_decoder
+        }
+
 ---STATE UPDATE
 update: Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -216,7 +262,7 @@ update msg model =
             if model.join_mode == "" then
                 ({model | join_mode = "join", join_status = "Enter a room code and username"}, Cmd.none)
             else
-                (model, Cmd.none)
+                (model, join_game_request model.username model.game_code)
         CreateGame ->
             if model.join_mode == "" then
                 ({model | join_mode = "start", join_status = "Enter a username to start"}, Cmd.none)
@@ -224,10 +270,10 @@ update msg model =
                 (model, create_game_request model.username)
         GuessKeyDown keycode ->
             if keycode == 13 then
-                let
-                    updatedModel = update_player_guess model model.username model.guess_input --TODO: replace model.username with the player's username who guessed  
-                in
-                    ({updatedModel| guess_input = ""}, send_new_query model model.guess_input)
+                if model.my_turn then
+                    (model, Cmd.none)
+                else
+                    ({model | guess_input = ""}, send_guess model)
             else
                 (model, Cmd.none)
         UpdateTimeRemaining time ->
@@ -236,7 +282,10 @@ update msg model =
             in
                 ({model | seconds_remaining = model.gif_timeout - currentTimeUTC}, Cmd.none)
         UpdateCurrentTime time ->
-            ({model | current_time = Time.posixToMillis time}, Cmd.none)
+            let
+                currentTimeUTC = (Time.posixToMillis time) // 1000
+            in
+                ({model | current_time = currentTimeUTC}, Cmd.none)
         RemoveNewGuesses time ->
             (update_remove_latest_guesses model, Cmd.none)
         GuessContentChanged txt ->
@@ -249,7 +298,7 @@ update msg model =
         UpdateGameStateFromServer result ->
             case result of
                 Ok data ->
-                    ({
+                    (update_remove_latest_guesses {
                         model | 
                         gif_url = data.info.gif_url,
                         gif_timeout = data.info.gif_timeout,
@@ -278,6 +327,26 @@ update msg model =
                     (model, Cmd.none)
         BackToMenu ->
             ({model | join_mode = "", join_status = "Please select an option below to play"}, Cmd.none)
+        JoinGameResponse result ->
+            case result of
+                Ok data ->
+                    ({
+                        model |
+                        session = Maybe.withDefault "" data.session
+                    }, Cmd.none)
+                Err _ ->
+                    (model, Cmd.none)
+        GameCodeInputChange code ->
+            ({
+                model |
+                game_code = code
+            }, Cmd.none)
+        SendGuessResponse result ->
+            case result of
+                Ok data ->
+                    (model, Cmd.none)
+                Err _ ->
+                    (model, Cmd.none)        
 
 --SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
@@ -347,7 +416,7 @@ render_join_screen model =
     div [class "join-screen"][
         h1[] [text "Guess That Gif"],
         h4[] [text model.join_status],
-        if model.join_mode == "join" then input[placeholder "Game Code"][] else p[][],
+        if model.join_mode == "join" then input[placeholder "Game Code", onInput GameCodeInputChange][] else p[][],
         if model.join_mode /= "" then input[placeholder "Username", onInput UsernameInputChange][] else p[][],
         if model.join_mode /= "start" then button[onClick JoinGame][text "Join"] else p[][],
         if model.join_mode /= "join" then button[onClick CreateGame][text "Start a room"] else p[][],
@@ -375,7 +444,7 @@ render_game_screen model =
 --Render out each piece of the page
 view: Model -> Html Msg
 view model =
-    if model.game_code == "" then
+    if model.session == "" then
         render_join_screen model
     else
         render_game_screen model

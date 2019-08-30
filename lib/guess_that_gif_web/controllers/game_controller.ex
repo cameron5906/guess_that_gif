@@ -31,11 +31,25 @@ defmodule GuessThatGifWeb.GameController do
     end
   end
 
-  def join(conn, _params) do
-    conn
-      |> json(%{
-        test: true
-      })
+  def join(conn, %{"username" => username, "code" => code}) do
+    create_player_result = GuessThatGif.PlayerService.create username
+
+    case create_player_result do
+      {:success, player} ->
+        result = GuessThatGif.GameService.can_join_game player.id, code
+
+        case result do
+          {:ok, game_id} ->
+            GuessThatGif.PlayerService.set_game_id player.id, game_id
+            conn |> json(%{
+              session: player.session
+            })
+        end
+      {:error, message} ->
+        conn |> json(%{
+          error: message
+        })
+    end
   end
 
   def info(conn, %{"id" => game_code}) do
@@ -45,7 +59,9 @@ defmodule GuessThatGifWeb.GameController do
     conn |> json(game_info)
   end
 
-  def guess(conn, %{"guess" => guess}) do
+  def guess(conn, %{"session" => session, "guess" => guess}) do
+    GuessThatGif.GameService.submit_guess session, guess
+
     conn
       |> json(%{
         guess: guess

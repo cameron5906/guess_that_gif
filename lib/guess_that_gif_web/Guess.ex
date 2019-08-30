@@ -6,8 +6,8 @@ defmodule GuessThatGif.Guess do
         field :correct_answer, :string
         field :guess, :string
         field :inserted_on, :time
+        field :guessed_on, :utc_datetime
         
-        belongs_to :game, GuessThatGif.Game
         belongs_to :player, GuessThatGif.Player
     end
   end
