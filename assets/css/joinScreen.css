@@ -1,0 +1,27 @@
+.join-screen {
+  position: fixed;
+  margin: auto auto;
+  width: 30em;
+  height: 20em;
+  top: 50%;
+  left: 50%;
+  margin-left: -15em;
+  margin-top: -10em;
+  text-align: center; }
+
+.join-screen h1 {
+  text-transform: uppercase;
+  font-weight: 800; }
+
+.join-screen input {
+  padding: 1.5em;
+  display: block;
+  width: 80%;
+  margin: auto auto;
+  margin-bottom: 1em; }
+
+.join-screen button {
+  display: block;
+  margin: auto auto;
+  margin-bottom: 0.5em;
+  width: 15em; }

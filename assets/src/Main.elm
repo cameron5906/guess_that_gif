@@ -62,7 +62,7 @@ initModel: (Model, Cmd Msg)
 initModel =
     ({
         game_code = "1567121751",
-        username = "Cameron",
+        username = "",
         guess_input = "",
         players = [
             {
@@ -239,12 +239,28 @@ render_image {gif_url, seconds_remaining} =
 render_guess_input model =
     input [class "guess-input", placeholder "Type your guess here", onKeyDown GuessKeyDown, onInput GuessContentChanged, value model.guess_input][]
 
---Render out each piece of the page
-view: Model -> Html Msg
-view model =
-    div [][
+render_join_screen: Html Msg
+render_join_screen =
+    div [class "join-screen"][
+        h1[] [text "Guess That Gif"],
+        h4[] [text "Please enter a game code and username"],
+        input[placeholder "Game Code"][],
+        input[placeholder "Username"][],
+        button[][text "Join"],
+        button[][text "Start a room"]
+    ]
+
+render_game_screen model =
+    div[] [
         render_player_list model,
         if model.gif_url == "" then render_status else p[][],
         if model.gif_url /= "" then render_image model else p[][],
         render_guess_input model
     ]
+--Render out each piece of the page
+view: Model -> Html Msg
+view model =
+    if model.username == "" then
+        render_join_screen
+    else
+        render_game_screen model
