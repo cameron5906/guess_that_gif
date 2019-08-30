@@ -34,8 +34,8 @@ defmodule GuessThatGif.GameService do
             } |> GuessThatGif.Repo.insert
 
         case insertion do
-            {:ok, _} ->
-                {:ok, game_code}
+            {:ok, game} ->
+                {:ok, game_code, game.id}
             {:error, _changeset} ->
                 {:error, ""}
         end

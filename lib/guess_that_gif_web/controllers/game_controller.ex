@@ -1,18 +1,30 @@
 defmodule GuessThatGifWeb.GameController do
   use GuessThatGifWeb, :controller
 
-  def start(conn, _params) do
-    result = GuessThatGif.GameService.create_game 1
+  def start(conn, %{"username" => username}) do
+    create_player_result = GuessThatGif.PlayerService.create username
 
-    conn
-      |> json(
-          case result do
-            {:ok, code} ->
-              %{created: true, code: code}
-            _ ->
-              %{created: false}
-          end
-        )
+    case create_player_result do
+      {:success, player} ->
+        result = GuessThatGif.GameService.create_game player.id
+
+        conn
+          |> json(
+              case result do
+                {:ok, code, game_id} ->
+                  GuessThatGif.PlayerService.set_game_id player.id game_id
+                  %{created: true, code: code}
+                _ ->
+                  %{created: false}
+              end
+            )
+      {:error, message} ->
+        conn
+          |> json(%{
+              created: false,
+              error: message
+            })
+    end
   end
 
   def join(conn, _params) do

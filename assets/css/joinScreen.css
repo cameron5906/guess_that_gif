@@ -18,7 +18,8 @@
   display: block;
   width: 80%;
   margin: auto auto;
-  margin-bottom: 1em; }
+  margin-bottom: 1em;
+  text-align: center; }
 
 .join-screen button {
   display: block;
