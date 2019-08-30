@@ -3,7 +3,7 @@ import Ecto.Query
 defmodule GuessThatGif.GameService do
     @type game_create_result :: {successful :: atom, code :: String.t}
 
-    def get_game(game_code) do
+    def get_game(game_code, _session) do
         status = get_game_status game_code
 
         result =

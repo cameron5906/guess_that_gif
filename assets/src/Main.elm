@@ -230,7 +230,7 @@ update_state_from_server: Model -> Cmd Msg
 update_state_from_server model =
     Http.get
         {
-            url = "/game/info?id=" ++ model.game_code,
+            url = "/game/info?id=" ++ model.game_code ++ "&session=" ++ model.session,
             expect = Http.expectJson UpdateGameStateFromServer gamestate_decoder
         }
 

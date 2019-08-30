@@ -52,9 +52,9 @@ defmodule GuessThatGifWeb.GameController do
     end
   end
 
-  def info(conn, %{"id" => game_code}) do
+  def info(conn, %{"session" => session, "id" => game_code}) do
     game_info =
-      GuessThatGif.GameService.get_game game_code
+      GuessThatGif.GameService.get_game game_code, session
 
     conn |> json(game_info)
   end
