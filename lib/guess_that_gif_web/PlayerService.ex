@@ -8,6 +8,8 @@ defmodule GuessThatGif.PlayerService do
         else if (username |> String.length) > 16 do
             {:error, "Username is too long"}
         else
+            session_id = GuessThatGif.StringGenerator.generate 6
+
             insertion =
                 Repo.insert %GuessThatGif.Player {
                     username: username,
@@ -15,7 +17,8 @@ defmodule GuessThatGif.PlayerService do
                     total_times_won: 0,
                     total_wrong_guesses: 0,
                     games_played: 0,
-                    game: 0
+                    game: 0,
+                    session: session_id
                 }
 
                 case insertion do

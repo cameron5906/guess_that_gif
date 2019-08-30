@@ -6,6 +6,7 @@ defmodule GuessThatGif.Game do
     field :is_active, :boolean
     field :gif_url, :string
     field :gif_timeout, :integer
+    field :status, :string
     belongs_to :creator, GuessThatGif.Player
   end
 end

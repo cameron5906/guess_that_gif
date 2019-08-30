@@ -29,6 +29,7 @@ type alias Player =
 
 type alias Model =
     {
+        session: String,
         my_turn: Bool,
         join_mode: String,
         join_status: String,
@@ -39,13 +40,15 @@ type alias Model =
         gif_url: String,
         gif_timeout: Int,
         seconds_remaining: Int,
-        current_time: Int
+        current_time: Int,
+        status: String
     }
 
 type alias GameInfo =
     {
         gif_url: String,
-        gif_timeout: Int
+        gif_timeout: Int,
+        status: String
     }
 
 type alias ServerGameState =
@@ -58,7 +61,8 @@ type alias CreateGameResponseData =
     {
         created: Bool,
         code: Maybe String,
-        error: Maybe String
+        error: Maybe String,
+        session: Maybe String
     }
 
 type Msg
@@ -80,7 +84,8 @@ type Msg
 initModel: (Model, Cmd Msg)
 initModel =
     ({
-        my_turn = True,
+        session = "",
+        my_turn = False,
         join_mode = "",
         join_status = "Please select an option below to play",
         game_code = "",
@@ -100,6 +105,7 @@ initModel =
         ],
         gif_url = "",
         gif_timeout = 0,
+        status = "",
         seconds_remaining = 10,
         current_time = 0
     }, Cmd.none)
@@ -107,16 +113,18 @@ initModel =
 --JSON DECODERS
 create_game_response_decoder: D.Decoder CreateGameResponseData
 create_game_response_decoder =
-    D.map3 CreateGameResponseData
+    D.map4 CreateGameResponseData
         (D.field "created" D.bool)
         (D.maybe (D.field "code" D.string))
         (D.maybe (D.field "error" D.string))
+        (D.maybe (D.field "session" D.string))
 
 gamestate_info_decoder: D.Decoder GameInfo
 gamestate_info_decoder =
-    D.map2 GameInfo
+    D.map3 GameInfo
         (D.field "gif_url" D.string)
         (D.field "gif_timeout" D.int)
+        (D.field "status" D.string)
 
 gamestate_player_decoder: D.Decoder Player
 gamestate_player_decoder =
@@ -245,6 +253,7 @@ update msg model =
                         model | 
                         gif_url = data.info.gif_url,
                         gif_timeout = data.info.gif_timeout,
+                        status = data.info.status,
                         players = data.players
                     }, Cmd.none)
                 Err _ ->
@@ -257,7 +266,8 @@ update msg model =
                     if data.created then
                         ({
                             model |
-                            game_code = Maybe.withDefault "" data.code
+                            game_code = Maybe.withDefault "" data.code,
+                            session = Maybe.withDefault "" data.session
                         }, Cmd.none)
                     else
                         ({
@@ -303,9 +313,10 @@ render_player {name, guess} =
             p[][]
     ]
 
-render_status =
+render_status: Model -> Html Msg
+render_status model =
     div [class "game-status"][
-        text "Status"
+        text model.status
     ]
 
 render_image: Model -> Html Msg
@@ -347,7 +358,7 @@ render_game_screen model =
     div[] [
         render_player_list model,
         if model.gif_url == "" && not model.my_turn then 
-            render_status 
+            render_status model
         else 
             p[][],
         if model.gif_url /= ""  then
@@ -358,7 +369,8 @@ render_game_screen model =
             render_my_turn 
         else
             p[][],
-        render_guess_input model
+        render_guess_input model,
+        p[class "join-code"][text ("Share code " ++ model.game_code ++ " with your friends")]
     ]
 --Render out each piece of the page
 view: Model -> Html Msg

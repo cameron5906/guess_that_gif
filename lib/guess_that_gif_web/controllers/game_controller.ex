@@ -13,7 +13,11 @@ defmodule GuessThatGifWeb.GameController do
               case result do
                 {:ok, code, game_id} ->
                   GuessThatGif.PlayerService.set_game_id player.id, game_id
-                  %{created: true, code: code}
+                  %{
+                    created: true, 
+                    code: code,
+                    session: player.session
+                  }
                 _ ->
                   %{created: false}
               end
