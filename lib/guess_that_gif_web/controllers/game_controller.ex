@@ -12,7 +12,7 @@ defmodule GuessThatGifWeb.GameController do
           |> json(
               case result do
                 {:ok, code, game_id} ->
-                  GuessThatGif.PlayerService.set_game_id player.id game_id
+                  GuessThatGif.PlayerService.set_game_id player.id, game_id
                   %{created: true, code: code}
                 _ ->
                   %{created: false}

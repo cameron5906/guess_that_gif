@@ -7,6 +7,6 @@ defmodule GuessThatGif.Player do
     field :total_wrong_guesses, :integer
     field :total_times_won, :integer
     field :games_played, :integer
-    field :game_id, :integer
+    field :game, :integer
   end
 end

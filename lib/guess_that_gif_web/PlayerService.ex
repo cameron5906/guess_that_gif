@@ -1,4 +1,5 @@
 import Ecto.Query
+alias GuessThatGif.Repo
 
 defmodule GuessThatGif.PlayerService do
     def create(username) do
@@ -8,14 +9,13 @@ defmodule GuessThatGif.PlayerService do
             {:error, "Username is too long"}
         else
             insertion =
-                GuessThatGif.Repo.insert %GuessThatGif.Player
-                {
+                Repo.insert %GuessThatGif.Player {
                     username: username,
                     total_correct_guesses: 0,
                     total_times_won: 0,
                     total_wrong_guesses: 0,
                     games_played: 0,
-                    game_id: 0
+                    game: 0
                 }
 
                 case insertion do
@@ -29,10 +29,10 @@ defmodule GuessThatGif.PlayerService do
     end
 
     def set_game_id(player_id, game_id) do
-        player = GuessThatGif.Player |> (GuessThatGif.Repo.get player_id)
+        player = GuessThatGif.Player |> (Repo.get player_id)
 
         player
-            |> Ecto.Changeset.change(game_id: game_id)
-            |> GuessThatGif.Repo.update
+            |> Ecto.Changeset.change(game: game_id)
+            |> Repo.update
     end
 end

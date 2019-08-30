@@ -41,10 +41,16 @@ type alias Model =
         current_time: Int
     }
 
-type alias ServerGameState =
+type alias GameInfo =
     {
         gif_url: String,
         gif_timeout: Int
+    }
+
+type alias ServerGameState =
+    {
+        info: GameInfo,
+        players: List Player
     }
 
 type alias CreateGameResponseData =
@@ -104,11 +110,24 @@ create_game_response_decoder =
         (D.maybe (D.field "code" D.string))
         (D.maybe (D.field "error" D.string))
 
+gamestate_info_decoder: D.Decoder GameInfo
+gamestate_info_decoder =
+    D.map2 GameInfo
+        (D.field "gif_url" D.string)
+        (D.field "gif_timeout" D.int)
+
+gamestate_player_decoder: D.Decoder Player
+gamestate_player_decoder =
+    D.map3 Player
+        (D.field "name" D.string)
+        (D.field "guess" D.string)
+        (D.field "guess_time" D.int)
+
 gamestate_decoder: D.Decoder ServerGameState
 gamestate_decoder =
     D.map2 ServerGameState
-        (D.field "gif_url" D.string)
-        (D.field "gif_timeout" D.int)
+        (D.field "info" gamestate_info_decoder)
+        (D.field "players" (D.list gamestate_player_decoder))
 
 new_query_response_decoder: D.Decoder Bool
 new_query_response_decoder =
@@ -213,14 +232,18 @@ update msg model =
         GuessContentChanged txt ->
             ({model | guess_input = txt}, Cmd.none)
         RetrieveGameStateFromServer time ->
-            (model, update_state_from_server model)
+            if model.game_code == "" then
+                (model, Cmd.none)
+            else
+                (model, update_state_from_server model)
         UpdateGameStateFromServer result ->
             case result of
                 Ok data ->
                     ({
                         model | 
-                        gif_url = data.gif_url,
-                        gif_timeout = data.gif_timeout
+                        gif_url = data.info.gif_url,
+                        gif_timeout = data.info.gif_timeout,
+                        players = data.players
                     }, Cmd.none)
                 Err _ ->
                     (model, Cmd.none)

@@ -9,6 +9,7 @@ defmodule GuessThatGif.GameService do
                 from g in "game",
                 where: g.join_code == ^game_code,
                 select: %{
+                    id: g.id,
                     join_code: g.join_code,
                     is_active: g.is_active,
                     gif_url: g.gif_url,
@@ -16,8 +17,22 @@ defmodule GuessThatGif.GameService do
                 }
             )
 
+        players =
+            GuessThatGif.Repo.all(
+                from ply in "player",
+                where: ply.game == ^result.id,
+                select: %{
+                    name: ply.username,
+                    guess: "",
+                    guess_time: 0
+                }
+            )
+
         if result != nil do
-            result
+            %{
+                info: result,
+                players: players
+            }
         else
             %{error: "Game does not exist"}
         end
