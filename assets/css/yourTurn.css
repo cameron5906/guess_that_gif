@@ -1,0 +1,14 @@
+.my-turn {
+  position: fixed;
+  width: 20em;
+  margin-left: -10em;
+  height: 16em;
+  margin-top: -10em;
+  left: 50%;
+  top: 50%;
+  text-align: center; }
+  .my-turn input {
+    padding: 1.5em;
+    width: 90%;
+    display: block;
+    margin: auto auto; }

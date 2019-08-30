@@ -29,6 +29,7 @@ type alias Player =
 
 type alias Model =
     {
+        my_turn: Bool,
         join_mode: String,
         join_status: String,
         game_code: String,
@@ -79,6 +80,7 @@ type Msg
 initModel: (Model, Cmd Msg)
 initModel =
     ({
+        my_turn = True,
         join_mode = "",
         join_status = "Please select an option below to play",
         game_code = "",
@@ -96,7 +98,7 @@ initModel =
                 guess_time = 0
             }
         ],
-        gif_url = "https://media.giphy.com/media/SOmjomEnNHsrK/giphy.gif",
+        gif_url = "",
         gif_timeout = 0,
         seconds_remaining = 10,
         current_time = 0
@@ -321,6 +323,14 @@ render_image {gif_url, seconds_remaining} =
 render_guess_input model =
     input [class "guess-input", placeholder "Type your guess here", onKeyDown GuessKeyDown, onInput GuessContentChanged, value model.guess_input][]
 
+render_my_turn: Html Msg
+render_my_turn =
+    div [class "my-turn"] [
+        h1[] [text "It's your turn!"],
+        h4[] [text "Enter a search phrase"],
+        input[placeholder "Search Query to guess"][]
+    ]
+
 render_join_screen: Model -> Html Msg
 render_join_screen model =
     div [class "join-screen"][
@@ -336,8 +346,18 @@ render_join_screen model =
 render_game_screen model =
     div[] [
         render_player_list model,
-        if model.gif_url == "" then render_status else p[][],
-        if model.gif_url /= "" then render_image model else p[][],
+        if model.gif_url == "" && not model.my_turn then 
+            render_status 
+        else 
+            p[][],
+        if model.gif_url /= ""  then
+            render_image model 
+        else 
+            p[][],
+        if model.my_turn == True then 
+            render_my_turn 
+        else
+            p[][],
         render_guess_input model
     ]
 --Render out each piece of the page
