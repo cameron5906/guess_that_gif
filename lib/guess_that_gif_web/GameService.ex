@@ -30,8 +30,8 @@ defmodule GuessThatGif.GameService do
                 distinct: ply.id,
                 select: %{
                     name: ply.username,
-                    guess: fragment("CASE WHEN ? = ? THEN ? ELSE ? END", g.guess, nil, "", g.guess),
-                    guess_time: fragment("EXTRACT(epoch from ?)", g.guessed_on)
+                    guess: fragment("COALESCE(?, ?)", g.guess, ""),
+                    guess_time: fragment("CASE WHEN ? IS NULL THEN ? ELSE EXTRACT(epoch from ?) END", g.guessed_on, 0, g.guessed_on)
                 }
             )
 
