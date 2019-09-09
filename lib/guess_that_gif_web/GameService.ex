@@ -9,6 +9,8 @@ defmodule GuessThatGif.GameService do
         result =
             GuessThatGif.Repo.one(
                 from g in "game",
+                left_join: p in "player",
+                on: p.id == g.chosen_player,
                 where: g.join_code == ^game_code,
                 select: %{
                     id: g.id,
@@ -16,7 +18,8 @@ defmodule GuessThatGif.GameService do
                     is_active: g.is_active,
                     gif_url: g.gif_url,
                     gif_timeout: g.gif_timeout,
-                    status: ^status
+                    status: ^status,
+                    chosen_player: fragment("CASE WHEN ? IS NULL THEN ? ELSE ? END", p.id, "", p.session)
                 }
             )
 
@@ -55,7 +58,8 @@ defmodule GuessThatGif.GameService do
                 is_active: true,
                 gif_url: "",
                 gif_timeout: 0,
-                status: "Waiting for players"
+                status: "Waiting for players",
+                chosen_player: owner_id
             } |> GuessThatGif.Repo.insert
 
         case insertion do

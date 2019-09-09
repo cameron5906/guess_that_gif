@@ -18,8 +18,9 @@ initModel =
         gif_url = "",
         gif_timeout = 0,
         status = "",
-        seconds_remaining = 10,
-        current_time = 0
+        seconds_remaining = -1,
+        current_time = 0,
+        query_input = ""
     }, Cmd.none)
 
 ---STATE UPDATE
@@ -40,10 +41,7 @@ update msg model =
                 (model, create_game_request model.username)
         GuessKeyDown keycode ->
             if keycode == 13 then
-                if model.my_turn then
-                    (model, Cmd.none)
-                else
-                    ({model | guess_input = ""}, send_guess model)
+                ({model | guess_input = ""}, send_guess model)
             else
                 (model, Cmd.none)
         UpdateTimeRemaining time ->
@@ -73,7 +71,8 @@ update msg model =
                         gif_url = data.info.gif_url,
                         gif_timeout = data.info.gif_timeout,
                         status = data.info.status,
-                        players = data.players
+                        players = data.players,
+                        my_turn = data.info.chosen_player == model.session
                     }, Cmd.none)
                 Err _ ->
                     (model, Cmd.none)
@@ -116,7 +115,14 @@ update msg model =
                 Ok data ->
                     (model, Cmd.none)
                 Err _ ->
-                    (model, Cmd.none)        
+                    (model, Cmd.none)   
+        QueryInputChanged text ->
+            ({
+                model |
+                query_input = text
+            }, Cmd.none)   
+        SendNewQuery ->
+            ({model | query_input = ""}, send_new_query model model.query_input)  
 
 --SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg

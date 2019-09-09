@@ -21,6 +21,7 @@ type alias Model =
         players: List Player,
         gif_url: String,
         gif_timeout: Int,
+        query_input: String,
         seconds_remaining: Int,
         current_time: Int,
         status: String
@@ -30,7 +31,8 @@ type alias GameInfo =
     {
         gif_url: String,
         gif_timeout: Int,
-        status: String
+        status: String,
+        chosen_player: String
     }
 
 type alias ServerGameState =
@@ -75,3 +77,5 @@ type Msg
     | JoinGameResponse (Result Http.Error JoinGameResponseData)
     | GameCodeInputChange String
     | SendGuessResponse (Result Http.Error SendGuessResponseData)
+    | QueryInputChanged String
+    | SendNewQuery

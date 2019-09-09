@@ -41,6 +41,8 @@ render_image {gif_url, seconds_remaining} =
         p [][
             if seconds_remaining > 0 then
                 text ("You have " ++ String.fromInt seconds_remaining ++ " seconds time remaining")
+            else if seconds_remaining < 0 then
+                text ""
             else
                 text "Time is up!"
         ],
@@ -50,12 +52,13 @@ render_image {gif_url, seconds_remaining} =
 render_guess_input model =
     input [class "guess-input", placeholder "Type your guess here", onKeyDown GuessKeyDown, onInput GuessContentChanged, value model.guess_input][]
 
-render_my_turn: Html Msg
-render_my_turn =
+render_my_turn: Model -> Html Msg
+render_my_turn model =
     div [class "my-turn"] [
         h1[] [text "It's your turn!"],
         h4[] [text "Enter a search phrase"],
-        input[placeholder "Search Query to guess"][]
+        input[placeholder "Search Query to guess", onInput QueryInputChanged, value model.query_input][],
+        button[onClick SendNewQuery][text "Submit"]
     ]
 
 render_join_screen: Model -> Html Msg
@@ -81,8 +84,8 @@ render_game_screen model =
             render_image model 
         else 
             p[][],
-        if model.my_turn == True then 
-            render_my_turn 
+        if model.my_turn && model.gif_url == "" then 
+            render_my_turn model
         else
             p[][],
         render_guess_input model,

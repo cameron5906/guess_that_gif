@@ -18,10 +18,11 @@ join_game_response_decoder =
 
 gamestate_info_decoder: D.Decoder GameInfo
 gamestate_info_decoder =
-    D.map3 GameInfo
+    D.map4 GameInfo
         (D.field "gif_url" D.string)
         (D.field "gif_timeout" D.int)
         (D.field "status" D.string)
+        (D.field "chosen_player" D.string)
 
 gamestate_player_decoder: D.Decoder Player
 gamestate_player_decoder =
